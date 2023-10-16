@@ -1,0 +1,14 @@
+def is_safe(board, row, col):
+    return all(board[i] != col and
+               board[i] - i != col - row and
+               board[i] + i != col + row for i in range(row))
+def solve_n_queens(n, row=0, board=[]):
+    if row == n:
+        return [board]
+    solutions = []
+    for col in range(n):
+        if is_safe(board, row, col):
+            solutions += solve_n_queens(n, row + 1, board + [col])
+    return solutions
+solutions = solve_n_queens(8)
+print(solutions)

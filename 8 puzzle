@@ -1,0 +1,62 @@
+import heapq
+
+class PuzzleState:
+    def __init__(self, puzzle, moves=0):
+        self.puzzle = puzzle
+        self.moves = moves
+
+    def __lt__(self, other):
+        return (self.moves + self.heuristic()) < (other.moves + other.heuristic())
+
+    def __eq__(self, other):
+        return self.puzzle == other.puzzle
+
+    def __hash__(self):
+        return hash(str(self.puzzle))
+
+    def is_goal(self):
+        return self.puzzle == [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
+
+    def heuristic(self):
+        # Manhattan distance heuristic
+        distance = 0
+        for i in range(3):
+            for j in range(3):
+                if self.puzzle[i][j] != 0:
+                    goal_row, goal_col = divmod(self.puzzle[i][j] - 1, 3)
+                    distance += abs(i - goal_row) + abs(j - goal_col)
+        return distance
+
+    def get_next_states(self):
+        blank_row, blank_col = next((i, j) for i, row in enumerate(self.puzzle) for j, val in enumerate(row) if val == 0)
+        for i, j in [(0, 1), (1, 0), (0, -1), (-1, 0)]:
+            if 0 <= blank_row + i < 3 and 0 <= blank_col + j < 3:
+                new_puzzle = [row[:] for row in self.puzzle]
+                new_puzzle[blank_row][blank_col], new_puzzle[blank_row + i][blank_col + j] = \
+                    new_puzzle[blank_row + i][blank_col + j], new_puzzle[blank_row][blank_col]
+                yield PuzzleState(new_puzzle, self.moves + 1)
+
+def solve_puzzle(initial_state):
+    open_list = []
+    heapq.heappush(open_list, initial_state)
+    closed_set = set()
+
+    while open_list:
+        current_state = heapq.heappop(open_list)
+        if current_state.is_goal():
+            return current_state.moves, current_state.puzzle
+
+        closed_set.add(current_state)
+
+        for next_state in current_state.get_next_states():
+            if next_state not in closed_set:
+                heapq.heappush(open_list, next_state)
+if __name__ == "__main__":
+    initial_puzzle = [[1, 2, 3], [4, 5, 6], [0, 7, 8]]  # Initial state
+    initial_state = PuzzleState(initial_puzzle)
+    moves, solved_puzzle = solve_puzzle(initial_state)
+    
+    print("Number of moves to solve the puzzle:", moves)
+    print("Solved puzzle:")
+    for row in solved_puzzle:
+        print(row)
